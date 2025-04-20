@@ -4,7 +4,7 @@ using TMDatePicker.Infrastructure;
 namespace TMDatePicker;
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddPersianDatePickerService(this IServiceCollection services)
+    public static IServiceCollection AddTMDatePickerService(this IServiceCollection services)
     {
         if (services == null)
         {
