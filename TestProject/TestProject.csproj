@@ -15,7 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\PersianDatePickerSample\TMDatePicker.csproj" />
+		<ProjectReference Include="..\PersianDatePickerSample\TMPersianDatePicker.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

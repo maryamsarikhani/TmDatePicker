@@ -1,4 +1,4 @@
-﻿namespace TMDatePicker.PersianDatePickerComponent;
+﻿namespace TMPersianDatePicker.PersianDatePickerComponent;
 
 public class DateCellModel
 {

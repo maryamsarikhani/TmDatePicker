@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace TMDatePicker.PersianDatePickerComponent;
+namespace TMPersianDatePicker.PersianDatePickerComponent;
 
 public static class PersianDateHelper
 {

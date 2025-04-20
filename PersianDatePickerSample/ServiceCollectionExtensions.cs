@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using TMDatePicker.Infrastructure;
+using TMPersianDatePicker.Infrastructure;
 
 namespace TMDatePicker;
 public static class ServiceCollectionExtensions

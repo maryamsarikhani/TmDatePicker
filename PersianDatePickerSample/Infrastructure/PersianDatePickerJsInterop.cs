@@ -1,6 +1,6 @@
 ﻿using Microsoft.JSInterop;
 
-namespace TMDatePicker.Infrastructure;
+namespace TMPersianDatePicker.Infrastructure;
 
 public class PersianDatePickerJsInterop : IAsyncDisposable
 {
@@ -12,7 +12,7 @@ public class PersianDatePickerJsInterop : IAsyncDisposable
         {
             Console.WriteLine("📦 Importing JS module from: persianDateMask.js");
             return jsRuntime.InvokeAsync<IJSObjectReference>(
-                "import", "/_content/TMDatePicker/js/persianDateMask.js").AsTask();
+                "import", "/_content/TMPersianDatePicker/js/persianDateMask.js").AsTask();
         });
     }
 

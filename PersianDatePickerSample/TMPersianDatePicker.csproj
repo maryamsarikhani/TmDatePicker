@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<!-- اضافه کردن این تنظیمات -->
 		<IsPackable>true</IsPackable>
-		<PackageId>TMDatePicker</PackageId>
+		<PackageId>TMPersianDatePicker</PackageId>
 		<Version>1.0.1</Version>
 		<Authors>Maryam Sarikhani</Authors>
 		<Description>A Blazor WebAssembly component package</Description>
