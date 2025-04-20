@@ -1,0 +1,492 @@
+﻿@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject PersianDatePickerJsInterop PersianDatePickerJsInterop
+
+<div class="Persian-date-picker" id="@($"PersianPicker_{UniqueId}")">
+    <label class="input-lable" for="@($"manualDateInput_{UniqueId}")">@Label</label>
+    <div class="input-wrapper">
+        <input class="p-date"
+        id="@($"manualDateInput_{UniqueId}")"
+        value="@manualInput"
+        disabled="@Disabled"
+        placeholder="@Placeholder"
+        @onfocus="() =>
+               {
+                   if (!Disabled && !string.IsNullOrWhiteSpace(selectedDateInPersianFormat))
+               manualInput = selectedDateInPersianFormat;
+               }"
+           @onclick="@(() => { if (!Disabled) OpenPicker(); })"
+        autocomplete="off" />
+
+        <a @onclick="Clear" class="clear">&#10006;</a>
+
+        @if (!string.IsNullOrEmpty(validationMessage))
+        {
+            <div class="validation-message">@validationMessage</div>
+        }
+    </div>
+    @if (openPicker)
+    {
+        <div class="Persian-date-wrapper">
+            @if (monthMode)
+            {
+                <div class="month-select">
+                    @foreach (var item in PersianDateHelper.GetMonths())
+                    {
+                        <a @onclick="() => GoToMonth(item.MonthNumber)">@item.MonthName</a>
+                    }
+                </div>
+            }
+            else if (yearMode)
+            {
+                <div class="year-select">
+                    @for (int i = 1406; i >= 1380; i--)
+                    {
+                        var year = i;
+                        <a @onclick="() => GoToYear(year)">@i</a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="year" id="@($"yearMonthSelector_{UniqueId}")">
+                    <a @onclick="NextYear" class="navigation">&#8249;</a>
+                    <span @onclick="YearMode">@currentYear</span>
+                    <a @onclick="PrevYear" class="navigation">&#8250;</a>
+                </div>
+
+                <div class="month" id="@($"yearMonthSelector_{UniqueId}")">
+                    <a @onclick="NextMonth" class="navigation">&#8249;</a>
+                    <span @onclick="MonthMode">@monthName</span>
+                    <a @onclick="PrevMonth" class="navigation">&#8250;</a>
+                </div>
+
+                <div class="week">
+                    @foreach (var name in PersianDateHelper.WeekNames)
+                    {
+                        <div class="day-name">
+                            <span>@name</span>
+                        </div>
+                    }
+
+                    @foreach (var item in cells)
+                    {
+                        var dayClass = "day";
+
+                        if (!item.Show)
+                        {
+                            dayClass = "";
+                        }
+                        else
+                        {
+                            if (selectedDate.HasValue && selectedDate.Value.Date == item.Date.Date)
+                                dayClass += " current";
+
+                            if (PersianDateHelper.GetPersianDayOfWeek(item.Date) == 5)
+                                dayClass += " friday";
+
+                            if (PersianDateHelper.HolidayHelper.IsHoliday(item.Date, pc.GetYear(item.Date)))
+                                dayClass += " holiday";
+                        }
+
+                        <div class="@dayClass">
+                            @if (item.Show)
+                            {
+                                <a @onclick="() => SelectDate(item.Date)">@item.Day</a>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="goto-today">
+                    <a @onclick="GoToToday" class="today-button">امروز</a>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string UniqueId { get; set; } = Guid.NewGuid().ToString("N");
+    [Parameter] public DateTime? Value { get => Date; set { if (Date != value) { Date = value; DateChanged.InvokeAsync(value); } } }
+    [Parameter] public EventCallback<DateTime?> ValueChanged { get; set; }
+    [Parameter] public DateTime? Date { get; set; }
+    [Parameter] public string Label { get; set; } = "تاریخ";
+    [Parameter] public EventCallback<DateTime?> DateChanged { get; set; }
+
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public string Placeholder { get; set; } = "تاریخ را انتخاب کنید";
+    [Parameter] public bool IsRequired { get; set; } = false;
+    [Parameter] public string RequiredMessage { get; set; } = "تاریخ الزامی است";
+
+    DateTime? selectedDate;
+    string selectedDateInPersianFormat = string.Empty;
+    System.Globalization.PersianCalendar pc = new();
+    string manualInput = string.Empty;
+    string validationMessage = string.Empty;
+    List<DateCellModel> cells = new();
+    string monthName = string.Empty;
+    int currentMonth, currentYear, currentDay, curYear;
+    bool monthMode, yearMode, openPicker;
+    DotNetObjectReference<PersianDatePicker>? objRef;
+
+    protected override void OnInitialized()
+    {
+        curYear = pc.GetYear(DateTime.Now);
+        if (Date.HasValue)
+            SetPersianFormatText(Date.Value);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Date != selectedDate)
+        {
+            selectedDate = Date;
+            if (selectedDate.HasValue)
+            {
+                SetPersianFormatText(selectedDate.Value);
+                PrepareCells(selectedDate.Value);
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+            try
+            {
+                await PersianDatePickerJsInterop.ClearInputAndApplyMask($"manualDateInput_{UniqueId}", objRef);
+                await PersianDatePickerJsInterop.AddEnterKeyListener($"manualDateInput_{UniqueId}", objRef);
+                await PersianDatePickerJsInterop.RegisterClickOutside($"PersianPicker_{UniqueId}", $"manualDateInput_{UniqueId}", $"yearMonthSelector_{UniqueId}", objRef);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[JSInterop Init Error]: {ex.Message}");
+            }
+        }
+    }
+
+    [JSInvokable]
+    public void UpdateCalendar(int year, int month, int day)
+    {
+        try
+        {
+            int maxDays = GetDaysInMonth(year, month);
+            if (day < 1 || day > maxDays)
+            {
+                validationMessage = $"این ماه {maxDays} روز دارد";
+                return;
+            }
+
+            var newDate = new DateTime(year, month, day, pc);
+            if (selectedDate != newDate)
+            {
+                selectedDate = newDate;
+                Date = selectedDate;
+                DateChanged.InvokeAsync(selectedDate);
+                SetPersianFormatText(selectedDate.Value);
+                PrepareCells(selectedDate.Value);
+            }
+
+            validationMessage = string.Empty;
+            openPicker = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            validationMessage = $"خطا در تنظیم تاریخ: {ex.Message}";
+        }
+    }
+
+    [JSInvokable]
+    public void ClosePicker()
+    {
+        openPicker = false;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (objRef is not null)
+            {
+                await PersianDatePickerJsInterop.RemovePersianDatePickerListeners($"PersianPicker_{UniqueId}");
+                objRef.Dispose();
+                objRef = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("console.error", $"Error disposing PersianDatePicker: {ex.Message}");
+        }
+        GC.SuppressFinalize(this);
+    }
+
+    void Clear()
+    {
+        Date = selectedDate = null;
+        manualInput = selectedDateInPersianFormat = string.Empty;
+        validationMessage = string.Empty;
+        openPicker = false;
+        monthMode = false;
+        yearMode = false;
+        DateChanged.InvokeAsync(null);
+        ValueChanged.InvokeAsync(null);
+        PersianDatePickerJsInterop.ClearInput($"manualDateInput_{UniqueId}");
+        StateHasChanged();
+    }
+
+    void OpenPicker()
+    {
+        if (openPicker)
+        {
+            openPicker = false;
+            return;
+        }
+
+        selectedDate = Date ?? DateTime.Now;
+        PrepareCells(selectedDate.Value);
+        openPicker = true;
+    }
+
+    void SetPersianFormatText(DateTime date)
+    {
+        currentYear = pc.GetYear(date);
+        currentMonth = pc.GetMonth(date);
+        currentDay = pc.GetDayOfMonth(date);
+        manualInput = selectedDateInPersianFormat = $"{currentYear}/{currentMonth:D2}/{currentDay:D2}";
+    }
+
+    void PrepareCells(DateTime date)
+    {
+        cells = new List<DateCellModel>();
+
+        currentYear = pc.GetYear(date);
+        currentMonth = pc.GetMonth(date);
+        currentDay = pc.GetDayOfMonth(date);
+        var isLeapYear = pc.IsLeapYear(currentYear);
+
+        monthName = $"{currentMonth.GetMonthName()}";
+        selectedDateInPersianFormat = $"{currentYear}/{currentMonth:D2}/{currentDay:D2}";
+
+        var firstDayOfDate = pc.ToDateTime(currentYear, currentMonth, 1, 0, 0, 0, 0);
+        int weekSpan = firstDayOfDate.DayOfWeek.GetWeekSpan();
+
+        int maxDay = GetDaysInMonth(currentYear, currentMonth);
+
+        cells.AddRange(Enumerable.Repeat(new DateCellModel { Day = 0 }, weekSpan));
+
+        for (int day = 1; day <= maxDay; day++)
+        {
+            cells.Add(new DateCellModel
+                {
+                    Day = day,
+                    Date = firstDayOfDate.AddDays(day - 1)
+                });
+        }
+
+        int remainingCells = 42 - cells.Count;
+        if (remainingCells > 0)
+        {
+            cells.AddRange(Enumerable.Repeat(new DateCellModel { Day = 0 }, remainingCells));
+        }
+    }
+
+    int GetDaysInMonth(int year, int month)
+    {
+        return pc.GetDaysInMonth(year, month);
+    }
+
+    void SelectDate(DateTime date)
+    {
+        try
+        {
+            selectedDate = Date = date;
+            DateChanged.InvokeAsync(selectedDate);
+            SetPersianFormatText(date);
+            PrepareCells(selectedDate.Value);
+            StateHasChanged();
+            openPicker = false;
+            monthMode = false;
+            yearMode = false;
+        }
+        catch (Exception ex)
+        {
+            validationMessage = $"خطا در انتخاب تاریخ: {ex.Message}";
+        }
+    }
+
+    void GoToToday()
+    {
+        try
+        {
+            var today = DateTime.Now;
+            var year = pc.GetYear(today);
+            var month = pc.GetMonth(today);
+            var day = pc.GetDayOfMonth(today);
+
+            selectedDate = Date = new DateTime(year, month, day, pc);
+
+            DateChanged.InvokeAsync(selectedDate);
+            SetPersianFormatText(selectedDate.Value);
+
+            PrepareCells(selectedDate.Value);
+            validationMessage = string.Empty;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            validationMessage = $"خطا در تنظیم تاریخ امروز: {ex.Message}";
+        }
+    }
+
+
+    public async Task SetDateAsync(DateTime date)
+    {
+        selectedDate = date;
+        Date = date;
+        SetPersianFormatText(date);
+        PrepareCells(date);
+
+        if (DateChanged.HasDelegate)
+        {
+            await DateChanged.InvokeAsync(date);
+        }
+
+        if (ValueChanged.HasDelegate)
+        {
+            await ValueChanged.InvokeAsync(date);
+        }
+
+        StateHasChanged();
+    }
+
+    #region [ Month ]
+
+    void NextMonth()
+    {
+        if (currentMonth < 12)
+        {
+            currentMonth++;
+        }
+        else
+        {
+            currentMonth = 1;
+            currentYear++;
+        }
+
+        UpdateCurrentDayForMonth();
+        UpdateSelectedDate();
+        PrepareCells(selectedDate.Value);
+    }
+
+    void PrevMonth()
+    {
+        if (currentMonth > 1)
+        {
+            currentMonth--;
+        }
+        else
+        {
+            currentMonth = 12;
+            currentYear--;
+        }
+
+        UpdateCurrentDayForMonth();
+        UpdateSelectedDate();
+        PrepareCells(selectedDate.Value);
+    }
+
+    void GoToMonth(int month)
+    {
+        currentMonth = month;
+
+        if (currentMonth == 12 && !pc.IsLeapYear(currentYear) && currentDay > 29)
+        {
+            currentDay = 29;
+        }
+
+        UpdateSelectedDate();
+        monthMode = yearMode = false;
+        PrepareCells(selectedDate.Value);
+        StateHasChanged();
+    }
+
+    void MonthMode()
+    {
+        monthMode = true;
+        yearMode = false;
+        openPicker = true;
+        StateHasChanged();
+    }
+
+    void UpdateCurrentDayForMonth()
+    {
+        int lastDayOfMonth = GetDaysInMonth(currentYear, currentMonth);
+        currentDay = currentDay > lastDayOfMonth ? lastDayOfMonth : currentDay;
+    }
+
+    void UpdateSelectedDate()
+    {
+        try
+        {
+            selectedDate = new DateTime(currentYear, currentMonth, currentDay, pc);
+            DateChanged.InvokeAsync(selectedDate);
+            SetPersianFormatText(selectedDate.Value);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"خطا در تنظیم تاریخ: {ex.Message}");
+            selectedDate = new DateTime(currentYear, currentMonth, 1, pc);
+        }
+    }
+
+    #endregion [ Month ]
+
+    #region [ Year ]
+
+    void NextYear()
+    {
+        currentYear++;
+        UpdateCurrentDayForMonth();
+        UpdateSelectedDate();
+        PrepareCells(selectedDate.Value);
+    }
+
+    void PrevYear()
+    {
+        currentYear--;
+        UpdateCurrentDayForMonth();
+        UpdateSelectedDate();
+        PrepareCells(selectedDate.Value);
+    }
+
+    void GoToYear(int year)
+    {
+        currentYear = year;
+
+        if (currentMonth == 12 && !pc.IsLeapYear(currentYear) && currentDay > 29)
+        {
+            currentDay = 29;
+        }
+
+        UpdateSelectedDate();
+        monthMode = yearMode = false;
+        openPicker = true;
+        PrepareCells(selectedDate.Value);
+        StateHasChanged();
+    }
+
+    void YearMode()
+    {
+        yearMode = true;
+        monthMode = false;
+        openPicker = true;
+        StateHasChanged();
+    }
+
+    #endregion [ Year ]
+}

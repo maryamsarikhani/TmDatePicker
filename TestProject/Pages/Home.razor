@@ -1,0 +1,55 @@
+﻿@page "/"
+@using TMComponents.PersianDatePickerComponent
+
+<h3>انتخاب بازه تاریخ</h3>
+
+
+        <PersianDatePicker @bind-Value ="@FromDate"
+                           Label="تاریخ از"/>
+
+        <PersianDatePicker @bind-Value="@ToDate"
+                           Label="تاریخ از" />
+
+        <PersianDatePicker @bind-Value="@FromDate"
+                           Label="تاریخ از" />
+
+
+
+
+@code {
+    private PersianDatePicker? fromDatePicker;
+    private PersianDatePicker? toDatePicker;
+    private DateTime? FromDate { get; set; }
+    private DateTime? ToDate { get; set; }
+
+    private System.Globalization.PersianCalendar pc = new();
+
+    protected override void OnInitialized()
+    {
+        var currentYear = pc.GetYear(DateTime.Now);
+
+        //امروز
+        // ّFromDate = DateTime.Now;
+
+        // روز اول سال
+        FromDate = new DateTime(currentYear, 1, 1, pc);
+        //روزآخر سال
+        ToDate = new DateTime(currentYear, 12, 1, pc);
+    }
+
+    private void OnFromDateChanged(DateTime? newDate)
+    {
+        if (newDate.HasValue)
+        {
+            FromDate = newDate.Value;
+        }
+    }
+
+    private void OnToDateChanged(DateTime? newDate)
+    {
+        if (newDate.HasValue)
+        {
+            ToDate = newDate.Value;
+        }
+    }
+}
