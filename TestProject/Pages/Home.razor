@@ -11,14 +11,14 @@
     <div class="col-md-4 mt-3">
         <input />
         <TMDatePicker @bind-Date="Model.date1"
-                      For="()=>Model.date1"
-                      Immediate="true" />
+        For="()=>Model.date1"
+        Immediate="true" />
         <TMDatePicker @bind-Date="Model.date2"
-                      For="()=>Model.date2"
-                      Immediate="true" />
+        For="()=>Model.date2"
+        Immediate="true" />
         <TMDatePicker @bind-Date="Model.date3"
-                      For="()=>Model.date3"
-                      Immediate="true" />
+        For="()=>Model.date3"
+        Immediate="true" />
     </div>
     <div class="col-12 mt-2">
         <button class="btn btn-primary" type="submit">Submit</button>
@@ -37,7 +37,7 @@
     public class Student
     {
         [Required(ErrorMessage = " ")]
-        public DateTime? date1 { get; set; }
+        public DateTime? date1 { get; set; } = DateTime.Now;
 
         [Required(ErrorMessage = " ")]
         public DateTime? date2 { get; set; }

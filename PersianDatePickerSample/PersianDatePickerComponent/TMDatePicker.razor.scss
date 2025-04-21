@@ -10,6 +10,11 @@
     font-family: 'Vazirmatn', sans-serif;
     margin-top: 3px;
 
+    &.error .input-lable {
+        color: red;
+        font-weight: bold;
+    }
+
     .input-lable {
         margin-right: 12px;
         margin-bottom: 4px;
@@ -31,7 +36,7 @@
             border-radius: 4px;
             cursor: pointer;
             direction: ltr;
-  /*          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);*/
+            /*          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);*/
 
             &:focus-visible {
                 outline: 0;
