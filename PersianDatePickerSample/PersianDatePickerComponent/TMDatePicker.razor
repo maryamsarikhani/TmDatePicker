@@ -5,7 +5,7 @@
 @inject PersianDatePickerJsInterop PersianDatePickerJsInterop
 
 <div class="@componentClass" id="@($"PersianPicker_{UniqueId}")">
-    <label class="input-lable" for="@($"manualDateInput_{UniqueId}")">@Label</label>
+    <label class="@inputClass" for="@($"manualDateInput_{UniqueId}")">@Label</label>
     <div class="input-wrapper">
         <input class="p-date @(componentClass.Equals("Persian-date-picker error") ? "error" : "" )"
         id="@($"manualDateInput_{UniqueId}")"
@@ -145,7 +145,7 @@
     DotNetObjectReference<TMDatePicker>? objRef;
     CustomValidationMessage<DateTime?> validation;
     string componentClass = "Persian-date-picker";
-
+    string inputClass = "input-lable";
 
 
     protected override void OnInitialized()
@@ -518,6 +518,7 @@
         var hasError = !status;
 
         componentClass = hasError ? $"Persian-date-picker error" : "Persian-date-picker";
+        inputClass = hasError ? "input-lable error" : "input-lable";
     }
   
 }

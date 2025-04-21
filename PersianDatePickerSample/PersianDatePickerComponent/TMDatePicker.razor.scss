@@ -10,14 +10,17 @@
     font-family: 'Vazirmatn', sans-serif;
     margin-top: 3px;
 
-    &.error .input-lable {
+    /*&.error .input-lable {
         color: red;
-        font-weight: bold;
-    }
+    }*/
 
     .input-lable {
         margin-right: 12px;
         margin-bottom: 4px;
+    }
+
+    .input-lable.error {
+        color: red;
     }
 
     .input-wrapper {
