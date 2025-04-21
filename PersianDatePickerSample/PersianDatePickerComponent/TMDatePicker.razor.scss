@@ -24,6 +24,7 @@
             font-size: 16px;
             text-align: center;
             border: 1px solid #ced4da;
+            border-radius: 4px;
             line-height: 30px;
             color: #212529;
             background-color: #fff;
@@ -36,6 +37,11 @@
                 outline: 0;
                 box-shadow: 0 0 5px rgba(70, 130, 180, 0.5);
             }
+        }
+
+        .error {
+            outline: none;
+            box-shadow: 0 0 0 1px red;
         }
 
         .clear {
@@ -64,18 +70,20 @@
             text-align: right;
             margin-top: 5px;
         }
+
+        .validation-message:empty {
+            display: none;
+        }
     }
 
     .Persian-date-wrapper {
-        position: absolute !important; /* تغییر از static به absolute */
+        position: fixed !important;
         z-index: 99999;
-        transform:translateY(1px);
-        top: 100%;
-        left: 0;
+        transform: translateY(1px);
         background: #fff;
         width: 200px;
         direction: rtl;
-        display: flex;
+        //display: flex;
         justify-content: center;
         flex-flow: column;
         padding: 7px;

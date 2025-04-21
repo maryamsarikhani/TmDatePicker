@@ -1,30 +1,42 @@
-﻿@implements IAsyncDisposable
+﻿@using System.Linq.Expressions
+@using TMComponents.Shared
+@implements IAsyncDisposable
 @inject IJSRuntime JS
 @inject PersianDatePickerJsInterop PersianDatePickerJsInterop
 
-<div class="Persian-date-picker" id="@($"PersianPicker_{UniqueId}")">
+<div class="@componentClass" id="@($"PersianPicker_{UniqueId}")">
     <label class="input-lable" for="@($"manualDateInput_{UniqueId}")">@Label</label>
     <div class="input-wrapper">
-        <input class="p-date"
+        <input class="p-date @(componentClass.Equals("Persian-date-picker error") ? "error" : "" )"
         id="@($"manualDateInput_{UniqueId}")"
-        value="@manualInput"
-        disabled="@Disabled"
-        placeholder="@Placeholder"
-        @onfocus="() =>
-               {
+               value="@manualInput"
+               disabled="@Disabled"
+               placeholder="@Placeholder"
+               @onfocus="() =>
+{
                    if (!Disabled && !string.IsNullOrWhiteSpace(selectedDateInPersianFormat))
-               manualInput = selectedDateInPersianFormat;
+                       manualInput = selectedDateInPersianFormat;
                }"
-           @onclick="@(() => { if (!Disabled) OpenPicker(); })"
-        autocomplete="off" />
+               @onclick="@(() => { if (!Disabled) OpenPicker(); })"
+               autocomplete="off" />
 
-        <a @onclick="Clear" class="clear">&#10006;</a>
+        @if (!string.IsNullOrWhiteSpace(selectedDateInPersianFormat) && !Disabled)
+        {
+            <a @onclick="Clear" class="clear">&#10006;</a>
+        }
+
+        @if (For is not null)
+        {
+            <CustomValidationMessage For="For" OnValidationChanged="OnValidationChanged" @ref="validation" />
+        }
 
         @if (!string.IsNullOrEmpty(validationMessage))
         {
             <div class="validation-message">@validationMessage</div>
         }
+
     </div>
+
     @if (openPicker)
     {
         <div class="Persian-date-wrapper">
@@ -113,6 +125,8 @@
     [Parameter] public DateTime? Date { get; set; }
     [Parameter] public string Label { get; set; } = "تاریخ";
     [Parameter] public EventCallback<DateTime?> DateChanged { get; set; }
+    [Parameter] public Expression<Func<DateTime?>> For { get; set; }
+    [Parameter] public bool Immediate { get; set; }
 
     [Parameter] public bool Disabled { get; set; } = false;
     [Parameter] public string Placeholder { get; set; } = "تاریخ را انتخاب کنید";
@@ -129,6 +143,10 @@
     int currentMonth, currentYear, currentDay, curYear;
     bool monthMode, yearMode, openPicker;
     DotNetObjectReference<TMDatePicker>? objRef;
+    CustomValidationMessage<DateTime?> validation;
+    string componentClass = "Persian-date-picker";
+
+
 
     protected override void OnInitialized()
     {
@@ -312,6 +330,10 @@
             openPicker = false;
             monthMode = false;
             yearMode = false;
+            if (Immediate && validation is not null)
+            {
+                validation.Immediate();
+            }
         }
         catch (Exception ex)
         {
@@ -489,5 +511,13 @@
     }
 
     #endregion [ Year ]
-        componentClass = hasError ? $"Persian-date-picker invalid" : "Persian-date-picker";
+
+
+     void OnValidationChanged(bool status)
+    {
+        var hasError = !status;
+
+        componentClass = hasError ? $"Persian-date-picker error" : "Persian-date-picker";
+    }
+  
 }

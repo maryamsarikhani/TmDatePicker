@@ -1,55 +1,53 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
 @using TMComponents.PersianDatePickerComponent
 
 <h3>انتخاب بازه تاریخ</h3>
 
 
-<TMDatePicker @bind-Value="@FromDate"
-              Label="تاریخ از" />
-
-<TMDatePicker @bind-Value="@ToDate"
-              Label="تاریخ از" />
-
-<TMDatePicker @bind-Value="@FromDate"
-              Label="تاریخ از" />
-
-
-
+<EditForm Model="@Model" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+    <div class="col-md-4 mt-3">
+        <input />
+        <TMDatePicker @bind-Date="Model.date1"
+                      For="()=>Model.date1"
+                      Immediate="true" />
+        <TMDatePicker @bind-Date="Model.date2"
+                      For="()=>Model.date2"
+                      Immediate="true" />
+        <TMDatePicker @bind-Date="Model.date3"
+                      For="()=>Model.date3"
+                      Immediate="true" />
+    </div>
+    <div class="col-12 mt-2">
+        <button class="btn btn-primary" type="submit">Submit</button>
+    </div>
+</EditForm>
 
 @code {
-    private TMDatePicker? fromDatePicker;
-    private TMDatePicker? toDatePicker;
-    private DateTime? FromDate { get; set; }
-    private DateTime? ToDate { get; set; }
 
-    private System.Globalization.PersianCalendar pc = new();
+    Student Model { get; set; } = new();
 
-    protected override void OnInitialized()
+    // void DateChanged(DateTime? value)
+    // {
+    //     Console.WriteLine($"Date Changed: {value}");
+    // }
+
+    public class Student
     {
-        var currentYear = pc.GetYear(DateTime.Now);
+        [Required(ErrorMessage = " ")]
+        public DateTime? date1 { get; set; }
 
-        //امروز
-        // ّFromDate = DateTime.Now;
+        [Required(ErrorMessage = " ")]
+        public DateTime? date2 { get; set; }
 
-        // روز اول سال
-        FromDate = new DateTime(currentYear, 1, 1, pc);
-        //روزآخر سال
-        ToDate = new DateTime(currentYear, 12, 1, pc);
+        [Required(ErrorMessage = " ")]
+        public DateTime? date3 { get; set; }
     }
 
-    private void OnFromDateChanged(DateTime? newDate)
+    void Submit()
     {
-        if (newDate.HasValue)
-        {
-            FromDate = newDate.Value;
-        }
-    }
 
-    private void OnToDateChanged(DateTime? newDate)
-    {
-        if (newDate.HasValue)
-        {
-            ToDate = newDate.Value;
-        }
     }
 }
