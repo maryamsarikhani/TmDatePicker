@@ -9,16 +9,16 @@
     <div class="input-wrapper">
         <input class="p-date @(componentClass.Equals("Persian-date-picker error") ? "error" : "" )"
         id="@($"manualDateInput_{UniqueId}")"
-               value="@manualInput"
-               disabled="@Disabled"
-               placeholder="@Placeholder"
-               @onfocus="() =>
+        value="@manualInput"
+        disabled="@Disabled"
+        placeholder="@Placeholder"
+        @onfocus="() =>
 {
                    if (!Disabled && !string.IsNullOrWhiteSpace(selectedDateInPersianFormat))
                        manualInput = selectedDateInPersianFormat;
                }"
-               @onclick="@(() => { if (!Disabled) OpenPicker(); })"
-               autocomplete="off" />
+        @onclick="@(() => { if (!Disabled) OpenPicker(); })"
+        autocomplete="off" />
 
         @if (!string.IsNullOrWhiteSpace(selectedDateInPersianFormat) && !Disabled)
         {
@@ -358,6 +358,7 @@
             PrepareCells(selectedDate.Value);
             validationMessage = string.Empty;
             StateHasChanged();
+            ClosePicker();
         }
         catch (Exception ex)
         {
