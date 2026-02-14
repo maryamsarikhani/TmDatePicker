@@ -7,7 +7,7 @@
 		<!-- اضافه کردن این تنظیمات -->
 		<IsPackable>true</IsPackable>
 		<PackageId>TMPersianDatePicker</PackageId>
-		<Version>2.1.0</Version>
+		<Version>2.1.1</Version>
 		<Authors>Maryam Sarikhani</Authors>
 		<Description>A Blazor WebAssembly component package</Description>
 		<PackageTags>blazor;wasm;components</PackageTags>
