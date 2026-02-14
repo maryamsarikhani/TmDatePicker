@@ -79,16 +79,16 @@ public static class PersianDateHelper
         private static readonly HashSet<string> Holidays = new()
         {
         // 📅 تعطیلات شمسی (ثابت)
-        "01/01",  // نوروز (1 فروردین)
-        "01/02",  // نوروز (2 فروردین)
-        "01/03",  // نوروز (3 فروردین)
-        "01/04",  // نوروز (4 فروردین)
-        "01/12",  // روز جمهوری اسلامی (12 فروردین)
-        "01/13",  // روز طبیعت (13 فروردین)
-        "03/14",  // رحلت امام خمینی (14 خرداد)
-        "03/15",  // قیام 15 خرداد (15 خرداد)
-        "11/22",  // پیروزی انقلاب اسلامی (22 بهمن)
-        "12/29",   // ملی شدن صنعت نفت (29 اسفند)
+        "01/01",  // نوروز - 1 فروردین
+        "01/02",  // نوروز - 2 فروردین
+        "01/03",  // نوروز - 3 فروردین
+        "01/04",  // نوروز - 4 فروردین
+        "01/12",  // روز جمهوری اسلامی
+        "01/13",  // روز طبیعت
+        "03/14",  // رحلت امام خمینی
+        "03/15",  // قیام 15 خرداد
+        "11/22",  // پیروزی انقلاب اسلامی
+        "12/29",  // ملی شدن صنعت نفت 29
         };
 
         // 🕌 تعطیلات مذهبی - قمری
@@ -138,24 +138,22 @@ public static class PersianDateHelper
             var persian = new PersianCalendar();
             var hijri = new HijriCalendar();
 
-            if (persianYear == persian.GetYear(DateTime.Now))
+            // 📌 تعطیلات قمری
+            foreach (var entry in HijriHolidays)
             {
-                // 📌 تعطیلات قمری
-                foreach (var entry in HijriHolidays)
-                {
-                    var parts = entry.Split('/');
-                    int month = int.Parse(parts[0]);
-                    int day = int.Parse(parts[1]);
+                var parts = entry.Split('/');
+                int year = int.Parse(parts[0]);
+                int month = int.Parse(parts[1]);
+                int day = int.Parse(parts[2]);
 
-                    try
-                    {
-                        DateTime holiday = persian.ToDateTime(persianYear, month, day, 0, 0, 0, 0);
-                        holidays.Add(holiday);
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        // در صورتی که تاریخ معتبر نباشد (مثلاً برای سال‌های کبیسه)
-                    }
+                try
+                {
+                    DateTime holiday = persian.ToDateTime(year, month, day, 0, 0, 0, 0);
+                    holidays.Add(holiday);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    // در صورتی که تاریخ معتبر نباشد مثلاً برای سال های کبیسه
                 }
             }
 
@@ -173,7 +171,7 @@ public static class PersianDateHelper
                 }
                 catch (ArgumentOutOfRangeException)
                 {
-                    // در صورتی که تاریخ معتبر نباشد (مثلاً برای سال های کبیسه)
+                    // در صورتی که تاریخ معتبر نباشد مثلاً برای سال های کبیسه
                 }
             }
 
@@ -185,117 +183,5 @@ public static class PersianDateHelper
             var holidays = GetAllHolidays(persianYear);
             return holidays.Any(d => d.Date == date.Date);
         }
-
-
-        //public static class HolidayHelper
-        //{
-        //    // 📅 تعطیلات شمسی (ثابت)
-        //    private static readonly HashSet<string> FixedSolarHolidays = new()
-        //{
-        //    "01/01", "01/02", "01/03", "01/04", "01/12", "01/13",
-        //    "03/14", "03/15", "11/22", "12/29"
-        //};
-
-        //    // 🕌 تعطیلات مذهبی (قمری)
-        //    private static readonly List<(int Month, int Day)> HijriHolidays = new()
-        //{
-        //    (1, 9), (1, 10), (2, 20), (2, 28), (2, 30),
-        //    (3, 8), (3, 17), (5, 3), (7, 13), (7, 27),
-        //    (8, 15), (9, 21), (10, 1), (10, 2), (10, 25),
-        //    (12, 10), (12, 18)
-        //};
-
-        //    // کش برای ذخیره نتایج
-        //    private static readonly ConcurrentDictionary<int, List<DateTime>> _holidaysCache = new();
-
-        //    public static List<DateTime> GetAllHolidays(int persianYear)
-        //    {
-        //        // اگر نتیجه در کش وجود دارد، از کش برگردانید
-        //        if (_holidaysCache.TryGetValue(persianYear, out var cachedResult))
-        //            return cachedResult;
-
-        //        var holidays = new List<DateTime>();
-        //        var persian = new PersianCalendar();
-        //        var hijri = new HijriCalendar();
-
-        //        // 1. اضافه کردن تعطیلات ثابت شمسی
-        //        foreach (var entry in FixedSolarHolidays)
-        //        {
-        //            var parts = entry.Split('/');
-        //            int month = int.Parse(parts[0]);
-        //            int day = int.Parse(parts[1]);
-
-        //            try
-        //            {
-        //                var date = persian.ToDateTime(persianYear, month, day, 0, 0, 0, 0);
-        //                holidays.Add(date.Date);
-        //            }
-        //            catch { /* ignore invalid dates */ }
-        //        }
-
-        //        // 2. اضافه کردن تعطیلات مذهبی فقط برای سال جاری
-        //        if (persianYear == persian.GetYear(DateTime.Now))
-        //        {
-        //            // 2. اضافه کردن تعطیلات مذهبی برای سال مورد نظر
-        //            foreach (var (hMonth, hDay) in HijriHolidays)
-        //            {
-        //                try
-        //                {
-        //                    // محاسبه محدوده سال قمری ممکن برای سال شمسی مورد نظر
-        //                    int minHijriYear = hijri.GetYear(persian.ToDateTime(persianYear, 1, 1, 0, 0, 0, 0)) - 1;
-        //                    int maxHijriYear = hijri.GetYear(persian.ToDateTime(persianYear, 12, 29, 0, 0, 0, 0)) + 1;
-
-        //                    for (int hYear = minHijriYear; hYear <= maxHijriYear; hYear++)
-        //                    {
-        //                        hijri.HijriAdjustment = hMonth switch
-        //                        {
-        //                            // ماه‌های 29 روزه: -1
-        //                            3 or 5 or 7 or 9 or 11 or 10 => -1,  // ربیع الاول, جمادی الاول, رجب, رمضان, ذی القعده
-
-        //                            // ماه‌های 30 روزه: -2
-        //                            1 or 2 or 4 or 6 or 8  or 12 => -2,  // محرم, صفر, ربیع الثانی, جمادی الثانی, شعبان, شوال, ذی الحجه
-
-        //                            1 or 2 or 4 or 6 or 8 or 12 => -2,
-        //                            _ => 0  // حالت پیش‌فرض (نباید اتفاق بیفتد)
-        //                        };
-
-        //                        var gDate = hijri.ToDateTime(hYear, hMonth, hDay, 0, 0, 0, 0);
-
-        //                        // فقط اگر تاریخ در سال شمسی مورد نظر باشد اضافه شود
-        //                        if (persian.GetYear(gDate) == persianYear)
-        //                        {
-        //                            holidays.Add(gDate.Date);
-        //                        }
-        //                    }
-        //                }
-        //                catch { /* ignore conversion errors */ }
-        //            }
-        //        }
-
-        //        // 3. اضافه کردن جمعه‌ها برای سال مورد نظر
-        //        var startDate = persian.ToDateTime(persianYear, 1, 1, 0, 0, 0, 0);
-        //        var endDate = persian.ToDateTime(persianYear, 12, 29, 0, 0, 0, 0);
-
-        //        for (var date = startDate; date <= endDate; date = date.AddDays(1))
-        //        {
-        //            if (date.DayOfWeek == DayOfWeek.Friday)
-        //                holidays.Add(date.Date);
-        //        }
-
-        //        // حذف تاریخ‌های تکراری و مرتب‌سازی
-        //        var result = holidays.Distinct().OrderBy(d => d).ToList();
-
-        //        // ذخیره در کش
-        //        _holidaysCache.TryAdd(persianYear, result);
-
-        //        return result;
-        //    }
-
-        //    public static bool IsHoliday(DateTime date, int persianYear)
-        //    {
-        //        var holidays = GetAllHolidays(persianYear);
-        //        return holidays.Any(d => d.Date == date.Date);
-        //    }
-        //}
     }
 }
